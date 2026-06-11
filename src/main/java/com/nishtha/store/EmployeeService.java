@@ -5,19 +5,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-import java.util.List;
-
 @Service
 public class EmployeeService {
 
     private EmployeeRepository employeeRepository;
+    private AuditLogService auditLogService;
 
-    public EmployeeService(EmployeeRepository employeeRepository) {
+    public EmployeeService(EmployeeRepository employeeRepository, AuditLogService auditLogService) {
         this.employeeRepository = employeeRepository;
+        this.auditLogService = auditLogService;
     }
 
     public Employee addEmployee(Employee employee) {
-        return employeeRepository.save(employee);
+        Employee saved = employeeRepository.save(employee);
+        auditLogService.log("Employee", saved.getId(), "CREATE");
+        return saved;
     }
 
     public Employee getEmployeeById(int id) {
@@ -32,10 +34,13 @@ public class EmployeeService {
 
     public Employee updateEmployee(int id, Employee updatedEmployee) {
         updatedEmployee.setId(id);
-        return employeeRepository.save(updatedEmployee);
+        Employee saved = employeeRepository.save(updatedEmployee);
+        auditLogService.log("Employee", id, "UPDATE");
+        return saved;
     }
 
     public void deleteEmployee(int id) {
         employeeRepository.deleteById(id);
+        auditLogService.log("Employee", id, "DELETE");
     }
 }
